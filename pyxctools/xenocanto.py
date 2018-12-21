@@ -22,3 +22,8 @@ class XenoCanto:
         r.raise_for_status()
 
         return r
+
+    def query(self, search_terms: str) -> dict:
+        r = self._get(search_terms)
+        query_json = r.json()
+        return query_json
