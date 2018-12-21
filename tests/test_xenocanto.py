@@ -86,3 +86,6 @@ class TestXenoCanto:
         QUERY_STRING = "Myrmecocichla monticola"
 
         xc.download_files(QUERY_STRING, "sounds")
+
+    def test_advanced_query_1(self, xc):
+        xc.query("common snipe", )

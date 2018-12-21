@@ -14,7 +14,7 @@ class XenoCanto:
         self.logger = logging.getLogger(__name__)
 
     def query(self,
-              query: str,
+              search_terms: str,
               genus: str = None,
               recordist: str = None,
               country: str = None,
@@ -31,7 +31,8 @@ class XenoCanto:
               area: str = None,
               since: str = None,
               year: str = None,
-              month: str = None) -> dict:
+              month: str = None,
+              pages: int = None) -> dict:
 
         """
         Returns JSON from the API call with the given search terms.
@@ -42,25 +43,27 @@ class XenoCanto:
 
         :return: A dictionary that represents the JSON returned by the xeno-canto API.
         """
-        payload = {"query": query,
-                   "gen": genus,
-                   "rec": recordist,
-                   "cnt": country,
-                   "loc": location,
-                   "rmk": remarks,
-                   "lat": latitude,
-                   "lon": longitude,
-                   "box": box,
-                   "also": background_species,
-                   "type": type,
-                   "nr": catalogue_number,
-                   "lic": license,
-                   "q": quality,
-                   "area": area,
-                   "since": since,
-                   "year": year,
-                   "month": month}
 
+        query_params = {"gen": genus,
+                        "rec": recordist,
+                        "cnt": country,
+                        "loc": location,
+                        "rmk": remarks,
+                        "lat": latitude,
+                        "lon": longitude,
+                        "box": box,
+                        "also": background_species,
+                        "type": type,
+                        "nr": catalogue_number,
+                        "lic": license,
+                        "q": quality,
+                        "area": area,
+                        "since": since,
+                        "year": year,
+                        "month": month}
+        query = "%20".join([search_terms] + [f"{name}:{var}" for name, var in query_params.items() if var])
+        print(query)
+        payload = {"query": query, "pages": pages}
         self.logger.debug(f"Sending request with parameters {payload}")
 
         r = requests.get(XC_BASE_URL, params=payload)
@@ -74,11 +77,11 @@ class XenoCanto:
 
         return file_data
 
-    def download_files(self, query: str, dir: str = "sounds"):
+    def download_files(self, search_terms: str, dir: str = "sounds"):
         """
         Downloads files returned by xeno-canto with the given search_terms.
 
-        :param query: The terms to query xeno-canto for.
+        :param search_terms: The terms to query xeno-canto for.
         :param dir: The name of the directory to download to.
         :return:
         """
@@ -89,7 +92,7 @@ class XenoCanto:
             self.logger.debug(f"Created new directory at {path}.")
             os.makedirs(path)
 
-        file_data = self.query(query)
+        file_data = self.query(search_terms)
 
         # Download recording and write metadata
         for recording in file_data["recordings"]:
@@ -97,7 +100,7 @@ class XenoCanto:
                 # Note that xeno-canto only supports mp3s.
                 with open(f"{path / recording['id']}.mp3", "wb") as f:
                     f.write(r.content)
-            self.logger.info(f"Downloaded {path / recording['id']}.")
+            self.logger.info(f"Downloaded {path / recording['id']}.mp3.")
 
         keys = file_data["recordings"][0].keys()
 
