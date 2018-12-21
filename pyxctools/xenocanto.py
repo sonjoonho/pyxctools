@@ -45,6 +45,13 @@ class XenoCanto:
         return file_data
 
     def download_files(self, search_terms: str, dir: str = "sounds"):
+        """
+        Downloads files returned by xeno-canto with the given search_terms.
+
+        :param search_terms: The terms to query xeno-canto for.
+        :param dir: The name of the directory to download to.
+        :return:
+        """
         # Raises a FileNotFoundError if the directory does not exist.
         path = Path(dir).resolve()
 
