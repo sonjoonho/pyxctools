@@ -36,8 +36,13 @@ class XenoCanto:
         :return: A dictionary that represents the JSON returned by the xeno-canto API.
         """
         r = self._get(search_terms)
-        query_json = r.json()
-        return query_json
+        file_data = r.json()
+
+        self.logger.info(f"Found {file_data['numRecordings']} recordings with "
+                         f"{file_data['numSpecies']} over "
+                         f"{file_data['numPages']}.")
+
+        return file_data
 
     def download_files(self, search_terms: str, dir: str = "sounds"):
         # Raises a FileNotFoundError if the directory does not exist.
@@ -64,4 +69,4 @@ class XenoCanto:
             w = csv.DictWriter(f, keys)
             w.writeheader()
             w.writerows(file_data["recordings"])
-        self.logger.info("Download metadata.")
+        self.logger.info("Downloaded metadata.")
