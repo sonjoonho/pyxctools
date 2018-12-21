@@ -1,6 +1,7 @@
 import pytest
 import requests
 import json
+import logging
 from unittest import mock
 from requests import HTTPError
 from pyxctools.xenocanto import XenoCanto
@@ -12,6 +13,7 @@ class TestXenoCanto:
     @pytest.fixture(name="xc")
     def create_xc(self):
         xc = XenoCanto()
+        xc.logger.setLevel(logging.DEBUG)
         return xc
 
     def _mock_response(self,
@@ -42,31 +44,6 @@ class TestXenoCanto:
         return mock_resp
 
     @mock.patch("pyxctools.xenocanto.requests.get")
-    def test_get_response(self, mock_get, xc):
-        QUERY_STRING = "common snipe"
-
-        mock_resp = self._mock_response()
-        mock_get.return_value = mock_resp
-
-        # If the request is unsuccessful, or json decoding fails, the query method will raise an exception.
-        r = xc._get(QUERY_STRING)
-
-        assert r is not None
-        assert mock_resp.raise_for_status.called
-
-    @mock.patch("pyxctools.xenocanto.requests.get")
-    def test_failed_response(self, mock_get, xc):
-        QUERY_STRING = "common snipe"
-
-        mock_resp = self._mock_response(status_code=requests.codes.internal_server_error,
-                                        raise_for_status=HTTPError("xeno-canto is down."))
-        mock_get.return_value = mock_resp
-
-        # This response should raise a HTTPError as it returned an unsuccessful status code (500).
-        with pytest.raises(HTTPError):
-            xc._get(QUERY_STRING)
-
-    @mock.patch("pyxctools.xenocanto.requests.get")
     def test_query(self, mock_get, xc):
         QUERY_STRING = "Myrmecocichla monticola"
         EXAMPLE_JSON = {'numRecordings': '13', 'numSpecies': '1', 'page': 1, 'numPages': 1, 'recordings': [
@@ -92,3 +69,20 @@ class TestXenoCanto:
         query_return = xc.query(QUERY_STRING)
 
         assert query_return == EXAMPLE_JSON
+
+    @mock.patch("pyxctools.xenocanto.requests.get")
+    def test_failed_response(self, mock_get, xc):
+        QUERY_STRING = "common snipe"
+
+        mock_resp = self._mock_response(status_code=requests.codes.internal_server_error,
+                                        raise_for_status=HTTPError("xeno-canto is down."))
+        mock_get.return_value = mock_resp
+
+        # This response should raise a HTTPError as it returned an unsuccessful status code (500).
+        with pytest.raises(HTTPError):
+            xc.query(QUERY_STRING)
+
+    def test_download(self, xc):
+        QUERY_STRING = "Myrmecocichla monticola"
+
+        xc.download_files(QUERY_STRING, "sounds")
