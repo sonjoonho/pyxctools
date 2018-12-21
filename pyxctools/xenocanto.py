@@ -24,6 +24,12 @@ class XenoCanto:
         return r
 
     def query(self, search_terms: str) -> dict:
+        """
+        Returns JSON from the API call with the given search terms.
+
+        :param search_terms: The terms to query xeno-canto for.
+        :return: A dictionary that represents the JSON returned by the xeno-canto API.
+        """
         r = self._get(search_terms)
         query_json = r.json()
         return query_json
