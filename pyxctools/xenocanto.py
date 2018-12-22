@@ -79,7 +79,53 @@ class XenoCanto:
         if int(file_data["numRecordings"]) <= 0:
             raise Warning("No results!")
 
+        self.logger.debug("Request successful.")
+
         return file_data
+
+    def _get_dir_path(self, dir: str) -> Path:
+        """
+        Returns the absolute path to dir. If the directory does not exist, it is created. If it is none, dir is taken as
+        the current working current working directory.
+
+        :param dir: The directory to get the path to.
+        :return: A path object representing the absolute path to dir.
+        """
+
+        if not dir:
+            dir = os.getcwd()
+
+        # Raises a FileNotFoundError if the directory does not exist.
+        path = Path(dir).resolve()
+
+        if not os.path.exists(path):
+            self.logger.debug(f"Created new directory at {path}.")
+            os.makedirs(path)
+
+        return path
+
+    def save_metadata(self, file_data: dict, dir: str = None) -> None:
+        """
+        Saves the result of a query to a CSV.
+
+        :param file_data: Data to save, usually the value returned by the query method.
+        :param dir: Directory to save to. If None, the current working directory is used.
+        :return:
+        """
+        if int(file_data["numRecordings"]) <= 0:
+            raise Exception("Empty metadata!")
+
+        path = self._get_dir_path(dir)
+
+        keys = file_data["recordings"][0].keys()
+
+        # Save metadata
+        with open(path / "metadata.csv", "w") as f:
+            w = csv.DictWriter(f, keys)
+            w.writeheader()
+            w.writerows(file_data["recordings"])
+
+        self.logger.info("Downloaded metadata.")
 
     def download_files(self,
                        search_terms: str = "",
@@ -101,22 +147,19 @@ class XenoCanto:
                        year: str = None,
                        month: str = None,
                        page: int = None,
-                       dir: str = "sounds") -> None:
+                       dir: str = "sounds",
+                       save_metadata: bool = True) -> None:
         """
-        Downloads files returned by xeno-canto with the given search_terms.
+        Downloads audio files and metadata returned by xeno-canto with the given search_terms.
 
         For details of each parameter, see https://www.xeno-canto.org/help/search.
 
+        :param save_metadata: Downloads and saves the metadata if true.
         :param dir: The name of the directory to download to.
         :return:
         """
 
-        # Raises a FileNotFoundError if the directory does not exist.
-        path = Path(dir).resolve()
-
-        if not os.path.exists(path):
-            self.logger.debug(f"Created new directory at {path}.")
-            os.makedirs(path)
+        path = self._get_dir_path(dir)
 
         file_data = self.query(search_terms=search_terms,
                                genus=genus,
@@ -149,11 +192,5 @@ class XenoCanto:
                     f.write(r.content)
             self.logger.info(f"Downloaded {path / recording['id']}.mp3.")
 
-        keys = file_data["recordings"][0].keys()
-
-        # Save metadata
-        with open(path / "metadata.csv", "w") as f:
-            w = csv.DictWriter(f, keys)
-            w.writeheader()
-            w.writerows(file_data["recordings"])
-        self.logger.info("Downloaded metadata.")
+        if save_metadata:
+            self.save_metadata(file_data, dir=dir)
