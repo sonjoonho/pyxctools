@@ -39,8 +39,6 @@ class XenoCanto:
 
         For details of each parameter, see https://www.xeno-canto.org/help/search.
 
-        TODO Implement caching of requests.
-
         :return: A dictionary that represents the JSON returned by the xeno-canto API.
         """
 

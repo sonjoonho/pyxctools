@@ -132,5 +132,3 @@ class TestXenoCanto:
 
     def test_download(self, xc):
         xc.download_files(search_terms="Myrmecocichla monticola", dir="sounds")
-
-        # TODO assert all files are correctly downloaded.
