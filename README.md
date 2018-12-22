@@ -63,7 +63,7 @@ date: the date that the recording was made
 `pyxctools` is primarily meant for use as a library, but a basic CLI is also provided.
 
 ```
-python3 pyxctools.py -q "commmon snipe" -d "snipe_sounds"
+python3 pyxctoolscli.py -q "commmon snipe" -d "snipe_sounds"
 ```
 
 ## About xeno-canto
