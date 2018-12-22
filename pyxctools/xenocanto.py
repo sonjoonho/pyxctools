@@ -184,13 +184,16 @@ class XenoCanto:
         if int(file_data["numRecordings"]) <= 0:
             return
 
+        print(f"Downloading {file_data['numRecordings']} files...")
+
         # Download recording and write metadata
         for recording in file_data["recordings"]:
             with requests.get(f"http:{recording['file']}", allow_redirects=True, stream=True) as r:
                 # Note that xeno-canto only supports mp3s.
                 with open(f"{path / recording['id']}.mp3", "wb") as f:
                     f.write(r.content)
-            self.logger.info(f"Downloaded {path / recording['id']}.mp3.")
+
+        print(f"Finished downloads.")
 
         if save_metadata:
             self.save_metadata(file_data, dir=dir)
