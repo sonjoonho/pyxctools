@@ -2,13 +2,13 @@
 
 [![Build Status](https://travis-ci.org/sonjoonho/pyxctools.svg?branch=master)](https://travis-ci.org/sonjoonho/pyxctools)
 
-This is a project that wraps the [https://www.xeno-canto.org/](xeno-canto) API for easy use in Python notebooks and scripts.
+This is a project that wraps the [xeno-canto](https://www.xeno-canto.org/) API for easy use in Python notebooks and scripts.
 
 This project requires Python 3.6 and above.
 
 ## Features
 
-Performs API calls, supporting [https://www.xeno-canto.org/help/search](advanced search parameters), returning data in a Python dictionary. 
+Performs API calls, supporting [advanced search parameters](https://www.xeno-canto.org/help/search), returning data in a Python dictionary. 
 
 Example of value returned by `query`
 ```
