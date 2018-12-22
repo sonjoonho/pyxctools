@@ -14,14 +14,14 @@ class XenoCanto:
         self.logger = logging.getLogger(__name__)
 
     def query(self,
-              search_terms: str,
+              search_terms: str = "",
               genus: str = None,
               recordist: str = None,
               country: str = None,
               location: str = None,
               remarks: str = None,
-              latitude: str = None,
-              longitude: str = None,
+              latitude: float = None,
+              longitude: float = None,
               box: str = None,
               background_species: str = None,
               type: str = None,
@@ -32,7 +32,7 @@ class XenoCanto:
               since: str = None,
               year: str = None,
               month: str = None,
-              pages: int = None) -> dict:
+              page: int = None) -> dict:
 
         """
         Returns JSON from the API call with the given search terms.
@@ -47,7 +47,7 @@ class XenoCanto:
         query_params = {"gen": genus,
                         "rec": recordist,
                         "cnt": country,
-                        "loc": location,
+                        "loc": f'"{location}"' if location else None,  # Location must be wrapped in double quotes.
                         "rmk": remarks,
                         "lat": latitude,
                         "lon": longitude,
@@ -61,9 +61,10 @@ class XenoCanto:
                         "since": since,
                         "year": year,
                         "month": month}
-        query = "%20".join([search_terms] + [f"{name}:{var}" for name, var in query_params.items() if var])
-        print(query)
-        payload = {"query": query, "pages": pages}
+
+        # Build query in the weird format that the xeno-canto API takes.
+        query = " ".join([search_terms] + [f"{name}:{var}" for name, var in query_params.items() if var])
+        payload = {"query": query, "page": page}
         self.logger.debug(f"Sending request with parameters {payload}")
 
         r = requests.get(XC_BASE_URL, params=payload)
@@ -75,16 +76,41 @@ class XenoCanto:
                          f"{file_data['numSpecies']} species over "
                          f"{file_data['numPages']} pages.")
 
+        if int(file_data["numRecordings"]) <= 0:
+            raise Warning("No results!")
+
         return file_data
 
-    def download_files(self, search_terms: str, dir: str = "sounds"):
+    def download_files(self,
+                       search_terms: str = "",
+                       genus: str = None,
+                       recordist: str = None,
+                       country: str = None,
+                       location: str = None,
+                       remarks: str = None,
+                       latitude: float = None,
+                       longitude: float = None,
+                       box: str = None,
+                       background_species: str = None,
+                       type: str = None,
+                       catalogue_number: str = None,
+                       license: str = None,
+                       quality: str = None,
+                       area: str = None,
+                       since: str = None,
+                       year: str = None,
+                       month: str = None,
+                       page: int = None,
+                       dir: str = "sounds") -> None:
         """
         Downloads files returned by xeno-canto with the given search_terms.
 
-        :param search_terms: The terms to query xeno-canto for.
+        For details of each parameter, see https://www.xeno-canto.org/help/search.
+
         :param dir: The name of the directory to download to.
         :return:
         """
+
         # Raises a FileNotFoundError if the directory does not exist.
         path = Path(dir).resolve()
 
@@ -92,7 +118,28 @@ class XenoCanto:
             self.logger.debug(f"Created new directory at {path}.")
             os.makedirs(path)
 
-        file_data = self.query(search_terms)
+        file_data = self.query(search_terms=search_terms,
+                               genus=genus,
+                               recordist=recordist,
+                               country=country,
+                               location=location,
+                               remarks=remarks,
+                               latitude=latitude,
+                               longitude=longitude,
+                               box=box,
+                               background_species=background_species,
+                               type=type,
+                               catalogue_number=catalogue_number,
+                               license=license,
+                               quality=quality,
+                               area=area,
+                               since=since,
+                               year=year,
+                               month=month,
+                               page=page)
+
+        if int(file_data["numRecordings"]) <= 0:
+            return
 
         # Download recording and write metadata
         for recording in file_data["recordings"]:

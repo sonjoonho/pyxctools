@@ -82,10 +82,53 @@ class TestXenoCanto:
         with pytest.raises(HTTPError):
             xc.query(QUERY_STRING)
 
+    @mock.patch("pyxctools.xenocanto.requests.get")
+    def test_advanced_query_1(self, mock_get, xc):
+
+        EXAMPLE_JSON = {'numRecordings': '3', 'numSpecies': '1', 'page': 1, 'numPages': 1, 'recordings': [
+            {'id': '228435', 'gen': 'Chordeiles', 'sp': 'nacunda', 'ssp': '', 'en': 'Nacunda Nighthawk',
+             'rec': 'Peter Boesman', 'cnt': 'Brazil', 'loc': 'Pantanal, Pixaim area, Mato Grosso',
+             'lat': '-16.6666666667',
+             'lng': '-56.8333333333', 'type': 'song', 'file': '//www.xeno-canto.org/228435/download',
+             'lic': '//creativecommons.org/licenses/by-nc-nd/4.0/', 'url': 'https://www.xeno-canto.org/228435',
+             'q': 'B', 'time': '05:45', 'date': '2005-07-31'},
+            {'id': '228434', 'gen': 'Chordeiles', 'sp': 'nacunda', 'ssp': '', 'en': 'Nacunda Nighthawk',
+             'rec': 'Peter Boesman', 'cnt': 'Brazil', 'loc': 'Pantanal, Pixaim area, Mato Grosso',
+             'lat': '-16.6666666667',
+             'lng': '-56.8333333333', 'type': 'song', 'file': '//www.xeno-canto.org/228434/download',
+             'lic': '//creativecommons.org/licenses/by-nc-nd/4.0/', 'url': 'https://www.xeno-canto.org/228434',
+             'q': 'B', 'time': '05:45', 'date': '2005-07-30'},
+            {'id': '228433', 'gen': 'Chordeiles', 'sp': 'nacunda', 'ssp': '', 'en': 'Nacunda Nighthawk',
+             'rec': 'Peter Boesman', 'cnt': 'Brazil', 'loc': 'Pantanal, Pixaim area, Mato Grosso',
+             'lat': '-16.6666666667',
+             'lng': '-56.8333333333', 'type': 'song', 'file': '//www.xeno-canto.org/228433/download',
+             'lic': '//creativecommons.org/licenses/by-nc-nd/4.0/', 'url': 'https://www.xeno-canto.org/228433',
+             'q': 'C', 'time': '05:45', 'date': '2005-07-30'}]}
+
+        mock_resp = self._mock_response(json_data=json.dumps(EXAMPLE_JSON))
+        mock_get.return_value = mock_resp
+
+        query_return = xc.query(country="brazil",
+                                recordist="peter",
+                                genus="Chordeiles",
+                                latitude=-16.33666,
+                                longitude=-56.553,
+                                location="Pantanal, Pixaim area, Mato Grosso")
+
+        assert query_return == EXAMPLE_JSON
+
+    @mock.patch("pyxctools.xenocanto.requests.get")
+    def test_empty_query(self, mock_get, xc):
+        EXAMPLE_JSON = {"numRecordings": "0",
+                        "numSpecies": "0",
+                        "page": 1,
+                        "numPages": 1,
+                        "recordings": []}
+
+        mock_resp = self._mock_response(json_data=json.dumps(EXAMPLE_JSON))
+        mock_get.return_value = mock_resp
+        with pytest.raises(Warning):
+            xc.query(search_terms="foobar")
+
     def test_download(self, xc):
-        QUERY_STRING = "Myrmecocichla monticola"
-
-        xc.download_files(QUERY_STRING, "sounds")
-
-    def test_advanced_query_1(self, xc):
-        xc.query("common snipe", )
+        xc.download_files(search_terms="Myrmecocichla monticola", dir="sounds")
